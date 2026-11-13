@@ -60,3 +60,14 @@ button.big.alt{background:#fff;color:#111}
 .tbl th,.tbl td{padding:10px 12px;text-align:center;border-bottom:1px solid var(--line);font-size:14px}
 .tbl th{background:#f0f2f5;font-weight:600}
 .tbl td:first-child{text-align:left;font-weight:600}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(3px);padding:16px}
+.modal-box{background:#fff;border-radius:14px;max-width:340px;width:100%;padding:22px 20px;box-shadow:0 10px 25px rgba(0,0,0,0.18);text-align:center;border:1px solid var(--line)}
+.modal-box h3{margin:0 0 6px 0;font-size:18px}
+.modal-box p{margin:0 0 14px 0;font-size:13px;color:#555}
+.pin-input{width:160px;font-size:26px;letter-spacing:10px;text-align:center;padding:8px 12px;margin:6px auto 12px;display:block;font-family:monospace;border:2px solid var(--line);border-radius:8px}
+.pin-input:focus{border-color:#111;outline:none}
+.error-msg{color:var(--l3);font-size:13px;margin-bottom:10px;font-weight:600}
+.modal-btns{display:flex;gap:10px;margin-top:10px}
+.modal-btns button{flex:1;padding:10px;font-weight:600}
+.pin-badge{display:inline-block;background:#eef2f7;border:1px solid #c8d3e0;border-radius:4px;padding:2px 8px;font-family:monospace;font-size:13px;font-weight:700;letter-spacing:2px}
+.small-btn{padding:4px 8px;font-size:12px;border-radius:4px;cursor:pointer}

@@ -17,9 +17,13 @@
   <div id="userList"></div>
   <form id="newUserForm">
     <input id="newName" placeholder="New Nickname" maxlength="20" required>
+    <input id="newPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="4-digit PIN (default 1234)">
     <button>Add</button>
   </form>
-  <p class="hint">All progress is automatically saved to this browser. Click 'Export' anytime to backup.</p>
+  <p class="hint">Click your name and enter your 4-digit PIN to start. PINs are managed by the teacher.</p>
+  <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line);text-align:center">
+    <button id="teacherLoginBtn" class="alt" style="width:100%;font-size:13px">Teacher Dashboard (PINs & Progress)</button>
+  </div>
 </main>
 
 <main id="home" class="panel hidden">
@@ -57,7 +61,11 @@
 </main>
 
 <main id="teacher" class="panel hidden">
-  <div class="topbar"><button id="teacherBack">← Back to Home</button><h2>Teacher Progress Dashboard</h2></div>
+  <div class="topbar">
+    <button id="teacherBack">← Back</button>
+    <h2>Teacher Progress Dashboard</h2>
+    <button id="changeTeacherPinBtn" style="font-size:12px;padding:6px 10px">Passcode Settings</button>
+  </div>
   <p class="hint">Overview of all registered students' learning progress and retention stats on this device.</p>
   <div class="row" style="background:#fff;padding:12px;border-radius:8px;border:1px solid var(--line);margin:14px 0">
     <label style="flex:1">Google Sheets Web App URL (Optional Sync)
@@ -95,6 +103,36 @@
   <p id="doneBody"></p>
   <button id="backHome" class="big">Back to Home</button>
 </main>
+
+<div id="studentPinModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3 id="studentPinTitle">Student Login</h3>
+    <p id="studentPinSub">Enter 4-digit PIN for your account</p>
+    <form id="studentPinForm">
+      <input type="password" id="studentPinInput" class="pin-input" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••" autocomplete="off" required>
+      <div id="studentPinError" class="error-msg hidden">Incorrect PIN. Please ask your teacher.</div>
+      <div class="modal-btns">
+        <button type="button" id="studentPinCancel" class="alt">Cancel</button>
+        <button type="submit" id="studentPinSubmit">Enter</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="teacherPinModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>Teacher Verification</h3>
+    <p>Enter teacher passcode to view student PINs (Default: 9999)</p>
+    <form id="teacherPinForm">
+      <input type="password" id="teacherPassInput" class="pin-input" maxlength="8" inputmode="numeric" placeholder="••••" autocomplete="off" required>
+      <div id="teacherPinError" class="error-msg hidden">Incorrect passcode.</div>
+      <div class="modal-btns">
+        <button type="button" id="teacherPinCancel" class="alt">Cancel</button>
+        <button type="submit" id="teacherPinSubmit">Unlock</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script src="cards.js"></script>
 <script src="app.js"></script>

@@ -21,7 +21,9 @@
   const save = () => localStorage.setItem(key(user), JSON.stringify(data));
   function load(u) {
     const raw = localStorage.getItem(key(u));
-    return raw ? JSON.parse(raw) : { cards: {}, logs: [], settings: { newLimit: 10, ch: 'all', lv: 0, shuffle: false } };
+    const d = raw ? JSON.parse(raw) : { cards: {}, logs: [], settings: { newLimit: 10, ch: 'all', lv: 0, shuffle: false } };
+    if (!d.pin) d.pin = '1234';
+    return d;
   }
 
   // ---------- SM-2 Spaced Repetition Engine ----------
@@ -83,7 +85,7 @@
       const b = document.createElement('button');
       b.className = 'userbtn';
       b.textContent = u;
-      b.onclick = () => enter(u);
+      b.onclick = () => promptStudentPin(u);
 
       const editBtn = document.createElement('button');
       editBtn.className = 'icon-btn';
@@ -168,6 +170,7 @@
     const lvText = lvEl && lvEl.selectedIndex >= 0 ? lvEl.options[lvEl.selectedIndex].text : 'All';
     const payload = JSON.stringify({
       student: user,
+      pin: data.pin || '1234',
       timestamp: new Date().toISOString(),
       chapter: chText,
       level: lvText,
@@ -203,20 +206,41 @@
       const today = ud.logs.filter((l) => l.t >= startOfDay());
       const rec = ud.logs.slice(-200);
       const ret = rec.length ? Math.round(100 * rec.filter((l) => l.r === 3).length / rec.length) : 0;
+      const uPin = ud.pin || '1234';
       rows += `<tr>
-        <td>${esc(u)}</td>
+        <td><strong>${esc(u)}</strong></td>
+        <td><span class="pin-badge">${esc(uPin)}</span></td>
         <td>${streak(ud)} days</td>
         <td>${today.length}</td>
         <td>${seen} / ${CARDS.length} (${Math.round(100 * seen / CARDS.length)}%)</td>
         <td>${mature}</td>
         <td>${ret}%</td>
+        <td><button class="small-btn reset-pin-btn" data-u="${esc(u)}">Reset PIN</button></td>
       </tr>`;
     });
     $('#gasUrlInput').value = getGasUrl();
     $('#teacherTableWrap').innerHTML = `<table class="tbl">
-      <thead><tr><th>Student</th><th>Streak</th><th>Today's Reviews</th><th>Words Seen</th><th>Mature (21d+)</th><th>Recent Accuracy</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="6">No registered students yet.</td></tr>'}</tbody>
+      <thead><tr><th>Student</th><th>4-Digit PIN</th><th>Streak</th><th>Today's Reviews</th><th>Words Seen</th><th>Mature (21d+)</th><th>Recent Accuracy</th><th>Action</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="8">No registered students yet.</td></tr>'}</tbody>
     </table>`;
+    document.querySelectorAll('.reset-pin-btn').forEach((btn) => {
+      btn.onclick = () => {
+        const tgt = btn.dataset.u;
+        const curPin = load(tgt).pin || '1234';
+        const nextPin = prompt(`Enter new 4-digit PIN for student "${tgt}":`, curPin);
+        if (!nextPin) return;
+        const trimmed = nextPin.trim();
+        if (!/^\d{4}$/.test(trimmed)) {
+          alert('PIN must be exactly 4 numeric digits (e.g., 1234).');
+          return;
+        }
+        const ud = load(tgt);
+        ud.pin = trimmed;
+        localStorage.setItem(key(tgt), JSON.stringify(ud));
+        alert(`PIN for "${tgt}" updated to ${trimmed}.`);
+        renderTeacher();
+      };
+    });
     show('teacher');
   }
   function renderHome() {
@@ -464,12 +488,105 @@
   }
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
+  // ---------- PIN & Auth System ----------
+  let pendingStudent = null;
+  function promptStudentPin(u) {
+    pendingStudent = u;
+    $('#studentPinTitle').textContent = `Login: ${u}`;
+    $('#studentPinSub').textContent = `Enter 4-digit PIN for ${u}`;
+    $('#studentPinInput').value = '';
+    $('#studentPinError').classList.add('hidden');
+    $('#studentPinModal').classList.remove('hidden');
+    setTimeout(() => $('#studentPinInput').focus(), 50);
+  }
+  $('#studentPinForm').onsubmit = (e) => {
+    e.preventDefault();
+    if (!pendingStudent) return;
+    const inputPin = $('#studentPinInput').value.trim();
+    const stData = load(pendingStudent);
+    const expectedPin = stData.pin || '1234';
+    if (inputPin === expectedPin) {
+      $('#studentPinModal').classList.add('hidden');
+      const u = pendingStudent;
+      pendingStudent = null;
+      enter(u);
+    } else {
+      $('#studentPinError').classList.remove('hidden');
+      $('#studentPinInput').value = '';
+      $('#studentPinInput').focus();
+    }
+  };
+  $('#studentPinCancel').onclick = () => {
+    pendingStudent = null;
+    $('#studentPinModal').classList.add('hidden');
+  };
+  $('#studentPinInput').addEventListener('input', () => {
+    if ($('#studentPinInput').value.length === 4) {
+      $('#studentPinForm').requestSubmit();
+    }
+  });
+
+  let teacherSource = 'login';
+  function openTeacherAuth(src) {
+    teacherSource = src || 'login';
+    $('#teacherPassInput').value = '';
+    $('#teacherPinError').classList.add('hidden');
+    $('#teacherPinModal').classList.remove('hidden');
+    setTimeout(() => $('#teacherPassInput').focus(), 50);
+  }
+  $('#teacherPinForm').onsubmit = (e) => {
+    e.preventDefault();
+    const inputPass = $('#teacherPassInput').value.trim();
+    const currentPass = localStorage.getItem('ws:teacher_pin') || '9999';
+    if (inputPass === currentPass) {
+      $('#teacherPinModal').classList.add('hidden');
+      renderTeacher();
+    } else {
+      $('#teacherPinError').classList.remove('hidden');
+      $('#teacherPassInput').value = '';
+      $('#teacherPassInput').focus();
+    }
+  };
+  $('#teacherPinCancel').onclick = () => {
+    $('#teacherPinModal').classList.add('hidden');
+  };
+  $('#teacherPassInput').addEventListener('input', () => {
+    const currentPass = localStorage.getItem('ws:teacher_pin') || '9999';
+    if ($('#teacherPassInput').value.length === currentPass.length) {
+      $('#teacherPinForm').requestSubmit();
+    }
+  });
+  $('#changeTeacherPinBtn').onclick = () => {
+    const cur = localStorage.getItem('ws:teacher_pin') || '9999';
+    const next = prompt('Enter new Teacher Passcode (at least 4 digits):', cur);
+    if (!next) return;
+    const trimmed = next.trim();
+    if (trimmed.length < 4) {
+      alert('Passcode must be at least 4 digits.');
+      return;
+    }
+    localStorage.setItem('ws:teacher_pin', trimmed);
+    alert(`Teacher passcode updated successfully. New passcode: ${trimmed}`);
+  };
+
   // ---------- Event Listeners ----------
   $('#newUserForm').onsubmit = (e) => {
     e.preventDefault();
     const n = $('#newName').value.trim(); if (!n) return;
-    const u = users(); if (!u.includes(n)) { u.push(n); localStorage.setItem('ws:users', JSON.stringify(u)); }
-    $('#newName').value = ''; enter(n);
+    const pinVal = $('#newPin').value.trim();
+    const pin = (pinVal.length === 4 && /^\d{4}$/.test(pinVal)) ? pinVal : '1234';
+    const u = users();
+    if (!u.includes(n)) {
+      u.push(n);
+      localStorage.setItem('ws:users', JSON.stringify(u));
+    }
+    const uData = load(n);
+    uData.pin = pin;
+    localStorage.setItem(key(n), JSON.stringify(uData));
+    $('#newName').value = '';
+    $('#newPin').value = '';
+    alert(`Student "${n}" registered with PIN: ${pin}\n(PIN can be viewed/reset in Teacher Dashboard)`);
+    enter(n);
   };
   ['chSel', 'lvSel', 'newLimit', 'shuffleOpt'].forEach((id) => $('#' + id).addEventListener('change', renderHome));
   $('#startStudy').onclick = startStudy;
@@ -497,8 +614,13 @@
     renderHome();
   }
   $('#quit').onclick = quitStudy;
-  $('#quizQuit').onclick = $('#backHome').onclick = $('#teacherBack').onclick = renderHome;
-  $('#teacherBtn').onclick = renderTeacher;
+  $('#quizQuit').onclick = $('#backHome').onclick = renderHome;
+  $('#teacherBack').onclick = () => {
+    if (teacherSource === 'home' && user) renderHome();
+    else renderLogin();
+  };
+  $('#teacherBtn').onclick = () => openTeacherAuth('home');
+  $('#teacherLoginBtn').onclick = () => openTeacherAuth('login');
   $('#saveGasBtn').onclick = () => {
     const val = $('#gasUrlInput').value.trim();
     setGasUrl(val);
