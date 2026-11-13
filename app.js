@@ -173,39 +173,141 @@
     $('#showWrap').classList.remove('hidden'); $('#rateWrap').classList.add('hidden');
     shownAt = Date.now();
   }
+  let isFlipping = false;
   function toggleCard() {
-    if (!cur) return;
-    const isFront = $('#back').classList.contains('hidden');
-    if (isFront) {
-      // 앞면 -> 뒷면
-      $('#card').className = 'card lv' + cur.level;
-      $('#back').innerHTML =
-        `<span class="badge">${LV[cur.level]}</span><div class="w">${esc(cur.word)}</div><div class="ko">${esc(cur.ko)}</div><div class="en">${esc(cur.def)}</div>` +
-        (cur.ex ? `<div class="ex">• ${esc(cur.ex)}<div class="exko">${esc(cur.ko_ex || '')}</div></div>` : '') +
-        (cur.notes ? `<div class="note">${esc(cur.notes)}</div>` : '');
-      $('#back').classList.remove('hidden'); $('#front').classList.add('hidden');
-      $('#showWrap').classList.add('hidden'); $('#rateWrap').classList.remove('hidden');
-      if (!cur._ms) cur._ms = Date.now() - shownAt;
-    } else {
-      // 뒷면 -> 앞면
-      $('#card').className = 'card';
-      $('#front').classList.remove('hidden'); $('#back').classList.add('hidden');
-      $('#showWrap').classList.remove('hidden'); $('#rateWrap').classList.add('hidden');
-    }
+    if (!cur || isFlipping) return;
+    isFlipping = true;
+    const cardEl = $('#card');
+    cardEl.classList.add('flipping');
+
+    setTimeout(() => {
+      const isFront = $('#back').classList.contains('hidden');
+      if (isFront) {
+        // 앞면 -> 뒷면
+        cardEl.className = 'card flipping lv' + cur.level;
+        $('#back').innerHTML =
+          `<span class="badge">${LV[cur.level]}</span><div class="w">${esc(cur.word)}</div><div class="ko">${esc(cur.ko)}</div><div class="en">${esc(cur.def)}</div>` +
+          (cur.ex ? `<div class="ex">• ${esc(cur.ex)}<div class="exko">${esc(cur.ko_ex || '')}</div></div>` : '') +
+          (cur.notes ? `<div class="note">${esc(cur.notes)}</div>` : '');
+        $('#back').classList.remove('hidden'); $('#front').classList.add('hidden');
+        $('#showWrap').classList.add('hidden'); $('#rateWrap').classList.remove('hidden');
+        if (!cur._ms) cur._ms = Date.now() - shownAt;
+      } else {
+        // 뒷면 -> 앞면
+        cardEl.className = 'card flipping';
+        $('#front').classList.remove('hidden'); $('#back').classList.add('hidden');
+        $('#showWrap').classList.remove('hidden'); $('#rateWrap').classList.add('hidden');
+      }
+
+      // 90도 회전 상태에서 내용 교체 후 다시 0도로 펴기
+      setTimeout(() => {
+        cardEl.classList.remove('flipping');
+        isFlipping = false;
+      }, 40);
+    }, 180);
   }
   function reveal() {
     if (!cur) return;
     if ($('#back').classList.contains('hidden')) toggleCard();
   }
-  function rate(r) {
+
+  // ---------- Button Particle Effects ----------
+  function fireEffect(r, targetBtn) {
+    const btn = targetBtn || document.querySelector(`#rateWrap button[data-r="${r}"]`);
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    if (r === 3) {
+      // Good: 축하 콘페티 (화려한 멀티컬러 사각/원형 조각)
+      const colors = ['#2e9e5b', '#00b894', '#f1c40f', '#3498db', '#e84393', '#fdcb6e', '#ff7675'];
+      for (let i = 0; i < 36; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const size = Math.random() * 8 + 6;
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 110 + 40;
+        const tx = Math.cos(angle) * dist;
+        const ty = Math.sin(angle) * dist - (Math.random() * 50 + 20); // 약간 위로 튀어오름
+        const tr = (Math.random() - 0.5) * 720;
+        const isRound = Math.random() > 0.5;
+
+        p.style.width = size + 'px';
+        p.style.height = (isRound ? size : size * 0.5) + 'px';
+        p.style.backgroundColor = color;
+        p.style.borderRadius = isRound ? '50%' : '2px';
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        p.style.setProperty('--tx', tx + 'px');
+        p.style.setProperty('--ty', ty + 'px');
+        p.style.setProperty('--tr', tr + 'deg');
+        p.style.setProperty('--ts', Math.random() * 0.4 + 0.6);
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 750);
+      }
+    } else if (r === 2) {
+      // Hard: 주황색 에너지 불꽃 / 집중 펄스 스파크
+      const colors = ['#e08a00', '#f39c12', '#e67e22', '#d35400', '#f1c40f'];
+      for (let i = 0; i < 22; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const size = Math.random() * 7 + 4;
+        const angle = (Math.PI / 2) + (Math.random() - 0.5) * Math.PI * 1.4; // 위쪽 반원 방향
+        const dist = Math.random() * 75 + 25;
+        const tx = Math.cos(angle) * dist;
+        const ty = -Math.sin(angle) * dist;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.backgroundColor = color;
+        p.style.borderRadius = '50%';
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        p.style.setProperty('--tx', tx + 'px');
+        p.style.setProperty('--ty', ty + 'px');
+        p.style.setProperty('--tr', '0deg');
+        p.style.setProperty('--ts', '0.2');
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 600);
+      }
+    } else if (r === 1) {
+      // Forgot: 붉은 먼지/깨진 조각이 흩날리며 가라앉는 이펙트
+      const colors = ['#d23a3a', '#c0392b', '#7f8c8d', '#95a5a6', '#e74c3c'];
+      for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const size = Math.random() * 6 + 3;
+        const tx = (Math.random() - 0.5) * 80;
+        const ty = Math.random() * 55 + 15; // 아래로 떨어짐
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.backgroundColor = color;
+        p.style.borderRadius = '2px';
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        p.style.setProperty('--tx', tx + 'px');
+        p.style.setProperty('--ty', ty + 'px');
+        p.style.setProperty('--tr', ((Math.random() - 0.5) * 360) + 'deg');
+        p.style.setProperty('--ts', '0.3');
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 700);
+      }
+    }
+  }
+
+  function rate(r, btnElement) {
     if (!cur || $('#back').classList.contains('hidden')) return;
+    fireEffect(r, btnElement);
     const now = Date.now(), isNew = !data.cards[cur.id];
     data.cards[cur.id] = schedule(data.cards[cur.id], r, now);
     data.logs.push({ t: now, id: cur.id, r, ms: cur._ms, n: isNew ? 1 : 0, m: 'f' });
     save();
     sessStats.n++; sessStats.r[r]++;
     if (r < 3) { const pos = Math.min(queue.length, r === 1 ? 3 : 7); queue.splice(pos, 0, cur); }
-    next();
+    setTimeout(next, 220); // 파티클이 터지는 손맛을 느낄 수 있도록 0.2초 후 다음 카드로 전환
   }
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function speak(w) {
@@ -265,7 +367,7 @@
     if (e.target && e.target.id === 'spk') return;
     toggleCard();
   };
-  document.querySelectorAll('#rateWrap button').forEach((b) => (b.onclick = () => rate(+b.dataset.r)));
+  document.querySelectorAll('#rateWrap button').forEach((b) => (b.onclick = () => rate(+b.dataset.r, b)));
   $('#quit').onclick = $('#quizQuit').onclick = $('#backHome').onclick = $('#teacherBack').onclick = renderHome;
   $('#teacherBtn').onclick = renderTeacher;
   $('#switchUser').onclick = renderLogin;

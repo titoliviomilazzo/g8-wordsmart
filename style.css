@@ -17,9 +17,12 @@ button.big.alt{background:#fff;color:#111}
 .stat span{font-size:12px;color:#333}
 .hint{font-size:13px}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.card{background:#fff;border:2px solid var(--line);border-radius:16px;min-height:340px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:transform 0.15s ease}
+.card-wrap{perspective:1000px;width:100%}
+.card{background:#fff;border:2px solid var(--line);border-radius:16px;min-height:340px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:transform 0.45s cubic-bezier(0.4, 0.2, 0.2, 1), border-color 0.3s ease, background 0.3s ease;transform-style:preserve-3d;position:relative}
+.card.flipping{transform:rotateY(90deg) scale(0.96)}
 .card:active{transform:scale(0.985)}
-.face{padding:28px;text-align:center}
+.card.flipping:active{transform:rotateY(90deg) scale(0.96)}
+.face{padding:28px;text-align:center;width:100%}
 .front .w{font-size:44px;font-weight:700}
 .front .p{margin-top:8px;font-size:16px}
 .front .pos{margin-top:6px;font-size:14px;color:#444}
@@ -36,8 +39,10 @@ button.big.alt{background:#fff;color:#111}
 .back .exko{color:#333;font-size:14px;margin-top:4px}
 .back .note{text-align:left;font-size:13px;margin-top:10px;color:#333}
 #showWrap,#rateWrap{display:flex;gap:10px;margin-top:14px}
-#showWrap button,#rateWrap button{flex:1;padding:16px}
+#showWrap button,#rateWrap button{flex:1;padding:16px;position:relative}
 .r1{border-color:var(--l3)!important;color:var(--l3)}.r2{border-color:var(--l2)!important;color:var(--l2)}.r3{border-color:var(--l1)!important;color:var(--l1)}
+.particle{position:fixed;pointer-events:none;z-index:9999;border-radius:2px;animation:p-fly 0.75s cubic-bezier(0.1, 0.8, 0.3, 1) forwards}
+@keyframes p-fly{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) rotate(var(--tr)) scale(var(--ts))}}
 #quizOpts{display:grid;gap:10px;margin-top:14px}
 #quizOpts button{padding:14px;text-align:left;font-size:17px}
 #quizOpts button.ok{background:var(--l1bg);border-color:var(--l1)}
