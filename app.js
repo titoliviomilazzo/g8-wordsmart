@@ -110,7 +110,7 @@
   function syncToGoogleSheets(sessionSummary) {
     const url = getGasUrl();
     if (!url || !user) return;
-    const payload = {
+    const payload = JSON.stringify({
       student: user,
       timestamp: new Date().toISOString(),
       chapter: $('#chSel') ? $('#chSel').options[$('#chSel').selectedIndex].text : 'All',
@@ -123,13 +123,14 @@
       totalLearned: Object.keys(data.cards).length,
       matureCount: Object.values(data.cards).filter((p) => p.st === 'review' && p.iv >= 21).length,
       streak: streak()
-    };
+    });
     try {
+      // Google Apps Script는 text/plain으로 전송해야 브라우저 CORS 프리플라이트 없이 doPost에 온전히 도달함
       fetch(url, {
         method: 'POST',
-        mode: 'no-cors', // Apps Script CORS 우회용 표준 방식
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: payload
       }).catch((e) => console.log('Sync err:', e));
     } catch (e) {
       console.log('Sync err:', e);
@@ -413,7 +414,23 @@
     toggleCard();
   };
   document.querySelectorAll('#rateWrap button').forEach((b) => (b.onclick = () => rate(+b.dataset.r, b)));
-  $('#quit').onclick = $('#quizQuit').onclick = $('#backHome').onclick = $('#teacherBack').onclick = renderHome;
+  function quitStudy() {
+    if (sessStats && sessStats.n > 0) {
+      const s = sessStats;
+      const acc = Math.round(((s.r[2] + s.r[3]) / s.n) * 100);
+      syncToGoogleSheets({
+        reviewedCount: s.n,
+        forgotCount: s.r[1],
+        hardCount: s.r[2],
+        goodCount: s.r[3],
+        accuracy: acc
+      });
+      sessStats = null;
+    }
+    renderHome();
+  }
+  $('#quit').onclick = quitStudy;
+  $('#quizQuit').onclick = $('#backHome').onclick = $('#teacherBack').onclick = renderHome;
   $('#teacherBtn').onclick = renderTeacher;
   $('#saveGasBtn').onclick = () => {
     const val = $('#gasUrlInput').value.trim();
