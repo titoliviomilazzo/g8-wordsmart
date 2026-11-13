@@ -75,11 +75,62 @@
   function renderLogin() {
     $('#who').textContent = '';
     $('#userList').innerHTML = '';
-    users().forEach((u) => {
+    const uList = users();
+    uList.forEach((u) => {
+      const row = document.createElement('div');
+      row.className = 'user-row';
+
       const b = document.createElement('button');
-      b.className = 'userbtn'; b.textContent = u;
+      b.className = 'userbtn';
+      b.textContent = u;
       b.onclick = () => enter(u);
-      $('#userList').appendChild(b);
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'icon-btn';
+      editBtn.title = 'Edit Name';
+      editBtn.textContent = '✏️ Edit';
+      editBtn.onclick = (e) => {
+        e.stopPropagation();
+        const newName = prompt(`Enter new name for "${u}":`, u);
+        if (!newName) return;
+        const trimmed = newName.trim();
+        if (!trimmed || trimmed === u) return;
+        const curUsers = users();
+        if (curUsers.includes(trimmed)) {
+          alert(`The name "${trimmed}" already exists.`);
+          return;
+        }
+        // localStorage 키 변경 및 유저 목록 업데이트
+        const uData = localStorage.getItem(key(u));
+        if (uData) {
+          localStorage.setItem(key(trimmed), uData);
+          localStorage.removeItem(key(u));
+        }
+        const idx = curUsers.indexOf(u);
+        if (idx !== -1) curUsers[idx] = trimmed;
+        localStorage.setItem('ws:users', JSON.stringify(curUsers));
+        renderLogin();
+      };
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'icon-btn del';
+      delBtn.title = 'Delete Student';
+      delBtn.textContent = '🗑️ Delete';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        const really = confirm(`Are you sure you want to permanently delete "${u}" and all learning records?`);
+        if (!really) return;
+        // 기록 삭제
+        localStorage.removeItem(key(u));
+        const curUsers = users().filter((name) => name !== u);
+        localStorage.setItem('ws:users', JSON.stringify(curUsers));
+        renderLogin();
+      };
+
+      row.appendChild(b);
+      row.appendChild(editBtn);
+      row.appendChild(delBtn);
+      $('#userList').appendChild(row);
     });
     show('login');
   }

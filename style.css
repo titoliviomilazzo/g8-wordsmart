@@ -50,7 +50,12 @@ button.big.alt{background:#fff;color:#111}
 .q .w{font-size:40px;font-weight:700;padding:30px;text-align:center}
 .bar{height:10px;background:#e6e8ec;border-radius:6px;overflow:hidden;display:flex;margin:4px 0 12px}
 .bar i{display:block;height:100%}
-.userbtn{display:block;width:100%;margin:6px 0;text-align:left}
+.user-row{display:flex;gap:8px;align-items:center;margin:8px 0}
+.user-row .userbtn{flex:1;margin:0;padding:12px 16px;text-align:left;font-weight:600;font-size:16px}
+.icon-btn{padding:8px 12px;font-size:14px;background:#f8f9fa;border:1px solid var(--line);border-radius:6px;cursor:pointer}
+.icon-btn.del{color:#d23a3a;border-color:#f5c6cb}
+.icon-btn:hover{background:#eee}
+.icon-btn.del:hover{background:#fde8e8}
 .tbl{width:100%;border-collapse:collapse;margin-top:14px;background:#fff;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
 .tbl th,.tbl td{padding:10px 12px;text-align:center;border-bottom:1px solid var(--line);font-size:14px}
 .tbl th{background:#f0f2f5;font-weight:600}
