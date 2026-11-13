@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Word Smart 플래시카드 (G8)</title>
+<title>Word Smart Flashcards (G8)</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,79 +13,79 @@
 </header>
 
 <main id="login" class="panel">
-  <h2>학생 선택</h2>
+  <h2>Select Student</h2>
   <div id="userList"></div>
   <form id="newUserForm">
-    <input id="newName" placeholder="새 닉네임" maxlength="20" required>
-    <button>추가</button>
+    <input id="newName" placeholder="New Nickname" maxlength="20" required>
+    <button>Add</button>
   </form>
-  <p class="hint">기록은 이 기기의 브라우저에 닉네임별로 저장됨. 상단 '백업'으로 파일 저장 가능.</p>
+  <p class="hint">All progress is automatically saved to this browser. Click 'Export' anytime to backup.</p>
 </main>
 
 <main id="home" class="panel hidden">
   <div class="stats" id="stats"></div>
-  <h3>오늘 학습</h3>
+  <h3>Today's Training</h3>
   <div class="row">
-    <label>챕터
+    <label>Chapter
       <select id="chSel"></select>
     </label>
-    <label>난이도
+    <label>Level
       <select id="lvSel">
-        <option value="0">전체</option>
-        <option value="1">1 (초록)</option>
-        <option value="2">2 (주황)</option>
-        <option value="3">3 (빨강)</option>
+        <option value="0">All Levels</option>
+        <option value="1">Level 1 (Green)</option>
+        <option value="2">Level 2 (Orange)</option>
+        <option value="3">Level 3 (Red)</option>
       </select>
     </label>
-    <label>신규/일 <input type="number" id="newLimit" min="0" max="50" value="10"></label>
+    <label>New / Day <input type="number" id="newLimit" min="0" max="50" value="10"></label>
     <label style="flex-direction:row;align-items:center;cursor:pointer;padding-bottom:6px">
-      <input type="checkbox" id="shuffleOpt" style="cursor:pointer"> 랜덤 순서
+      <input type="checkbox" id="shuffleOpt" style="cursor:pointer"> Shuffle Order
     </label>
   </div>
   <div class="row">
-    <button id="startStudy" class="big">학습 시작 (<span id="dueCount">0</span>개)</button>
-    <button id="startQuiz" class="big alt">4지선다 퀴즈</button>
+    <button id="startStudy" class="big">Start Study (<span id="dueCount">0</span> cards)</button>
+    <button id="startQuiz" class="big alt">4-Choice Quiz</button>
   </div>
-  <h3>진행 현황</h3>
+  <h3>Progress Overview</h3>
   <div id="progress"></div>
   <div class="row">
-    <button id="exportBtn">백업</button>
-    <label class="filebtn">복원<input type="file" id="importFile" accept=".json" hidden></label>
-    <button id="teacherBtn">교사용 진도 보기</button>
-    <button id="switchUser">사용자 변경</button>
+    <button id="exportBtn">Export Data</button>
+    <label class="filebtn">Import Data<input type="file" id="importFile" accept=".json" hidden></label>
+    <button id="teacherBtn">Teacher Dashboard</button>
+    <button id="switchUser">Switch Student</button>
   </div>
 </main>
 
 <main id="teacher" class="panel hidden">
-  <div class="topbar"><button id="teacherBack">← 홈으로</button><h2>교사용 전체 학생 진도 대시보드</h2></div>
-  <p class="hint">이 기기에 저장된 전체 학생들의 학습 기록 및 진도율을 한눈에 조회합니다.</p>
+  <div class="topbar"><button id="teacherBack">← Back to Home</button><h2>Teacher Progress Dashboard</h2></div>
+  <p class="hint">Overview of all registered students' learning progress and retention stats on this device.</p>
   <div id="teacherTableWrap"></div>
 </main>
 
 <main id="study" class="panel hidden">
-  <div class="topbar"><button id="quit">← 나가기</button><span id="remain"></span></div>
+  <div class="topbar"><button id="quit">← Exit</button><span id="remain"></span></div>
   <div id="card" class="card">
     <div class="face front" id="front"></div>
     <div class="face back hidden" id="back"></div>
   </div>
-  <div id="showWrap"><button id="showBtn" class="big">정답 보기 (Space)</button></div>
+  <div id="showWrap"><button id="showBtn" class="big">Show Answer (Space)</button></div>
   <div id="rateWrap" class="hidden">
-    <button data-r="1" class="r1">모름 (1)</button>
-    <button data-r="2" class="r2">애매 (2)</button>
-    <button data-r="3" class="r3">알아요 (3)</button>
+    <button data-r="1" class="r1">Forgot (1)</button>
+    <button data-r="2" class="r2">Hard (2)</button>
+    <button data-r="3" class="r3">Good (3)</button>
   </div>
 </main>
 
 <main id="quiz" class="panel hidden">
-  <div class="topbar"><button id="quizQuit">← 나가기</button><span id="quizInfo"></span></div>
+  <div class="topbar"><button id="quizQuit">← Exit</button><span id="quizInfo"></span></div>
   <div id="quizQ" class="card"></div>
   <div id="quizOpts"></div>
 </main>
 
 <main id="done" class="panel hidden">
-  <h2 id="doneTitle">오늘 세션 완료</h2>
+  <h2 id="doneTitle">Session Complete</h2>
   <p id="doneBody"></p>
-  <button id="backHome" class="big">홈으로</button>
+  <button id="backHome" class="big">Back to Home</button>
 </main>
 
 <script src="cards.js"></script>

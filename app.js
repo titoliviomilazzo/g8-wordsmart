@@ -2,12 +2,20 @@
   'use strict';
   const $ = (s) => document.querySelector(s);
   const MIN = 60000, DAY = 86400000;
-  const LV = { 1: '1단계 · 기초', 2: '2단계 · 심화', 3: '3단계 · 고난도' };
-  const CHN = { 2: '2. 핵심 단어', 4: '4. SAT 단어', 5: '5. GRE 단어', 9: '9. 예술', 10: '10. 금융', 11: '11. 외래어', 12: '12. 과학' };
+  const LV = { 1: 'Level 1 · Basic', 2: 'Level 2 · Intermediate', 3: 'Level 3 · Advanced' };
+  const CHN = {
+    2: '2. The Words',
+    4: '4. SAT Key Terms',
+    5: '5. GRE Key Terms',
+    9: '9. The Arts',
+    10: '10. Finance',
+    11: '11. Foreign Words',
+    12: '12. Science'
+  };
   const byId = Object.fromEntries(CARDS.map((c) => [c.id, c]));
   let user = null, data = null, queue = [], cur = null, sessionStart = 0, shownAt = 0, sessStats = null;
 
-  // ---------- 저장소 ----------
+  // ---------- Storage ----------
   const key = (u) => 'ws:user:' + u;
   const users = () => JSON.parse(localStorage.getItem('ws:users') || '[]');
   const save = () => localStorage.setItem(key(user), JSON.stringify(data));
@@ -16,7 +24,7 @@
     return raw ? JSON.parse(raw) : { cards: {}, logs: [], settings: { newLimit: 10, ch: 'all', lv: 0, shuffle: false } };
   }
 
-  // ---------- 스케줄러 (SM-2 변형, 3단계 평가) ----------
+  // ---------- SM-2 Spaced Repetition Engine ----------
   function schedule(p, r, now) {
     if (!p) p = { st: 'new', iv: 0, ef: 2.5, due: now, lapses: 0, reps: 0 };
     p.reps++;
@@ -32,7 +40,7 @@
     return p;
   }
 
-  // ---------- 필터 / 큐 ----------
+  // ---------- Filters & Queue ----------
   function pool() {
     const ch = data.settings.ch, lv = +data.settings.lv;
     return CARDS.filter((c) => (ch === 'all' || c.chapter === +ch) && (!lv || c.level === lv));
@@ -60,7 +68,7 @@
   }
   const startOfDay = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); };
 
-  // ---------- 화면 ----------
+  // ---------- Views ----------
   function show(id) {
     ['login', 'home', 'study', 'quiz', 'done', 'teacher'].forEach((s) => $('#' + s).classList.toggle('hidden', s !== id));
   }
@@ -78,7 +86,7 @@
   function enter(u) {
     user = u; data = load(u);
     $('#who').textContent = u;
-    $('#chSel').innerHTML = '<option value="all">전체</option>' +
+    $('#chSel').innerHTML = '<option value="all">All Chapters</option>' +
       Object.entries(CHN).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
     $('#chSel').value = data.settings.ch; $('#lvSel').value = data.settings.lv; $('#newLimit').value = data.settings.newLimit;
     $('#shuffleOpt').checked = !!data.settings.shuffle;
@@ -104,16 +112,16 @@
       const ret = rec.length ? Math.round(100 * rec.filter((l) => l.r === 3).length / rec.length) : 0;
       rows += `<tr>
         <td>${esc(u)}</td>
-        <td>${streak(ud)}일</td>
-        <td>${today.length}회</td>
+        <td>${streak(ud)} days</td>
+        <td>${today.length}</td>
         <td>${seen} / ${CARDS.length} (${Math.round(100 * seen / CARDS.length)}%)</td>
-        <td>${mature}개</td>
+        <td>${mature}</td>
         <td>${ret}%</td>
       </tr>`;
     });
     $('#teacherTableWrap').innerHTML = `<table class="tbl">
-      <thead><tr><th>학생 이름</th><th>연속 학습</th><th>오늘 복습</th><th>학습 완료 단어</th><th>장기 기억(21일+)</th><th>최근 정답률</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="6">등록된 학생이 없습니다.</td></tr>'}</tbody>
+      <thead><tr><th>Student</th><th>Streak</th><th>Today's Reviews</th><th>Words Seen</th><th>Mature (21d+)</th><th>Recent Accuracy</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="6">No registered students yet.</td></tr>'}</tbody>
     </table>`;
     show('teacher');
   }
@@ -129,8 +137,8 @@
     const rec = data.logs.slice(-200);
     const ret = rec.length ? Math.round(100 * rec.filter((l) => l.r === 3).length / rec.length) : 0;
     $('#stats').innerHTML = [
-      [today.length, '오늘 복습'], [today.length ? Math.round(100 * ok / today.length) + '%' : '-', '오늘 정답률'],
-      [streak() + '일', '연속 학습'], [seen + '/' + CARDS.length, '학습한 단어'], [mature, '장기기억(21일+)'], [ret + '%', '최근 200회 "알아요"']
+      [today.length, "Today's Reviews"], [today.length ? Math.round(100 * ok / today.length) + '%' : '-', "Today's Accuracy"],
+      [streak() + ' days', 'Daily Streak'], [seen + '/' + CARDS.length, 'Words Learned'], [mature, 'Mature (21d+)'], [ret + '%', 'Recent "Good" Rate']
     ].map(([a, b]) => `<div class="stat"><b>${a}</b><span>${b}</span></div>`).join('');
     $('#dueCount').textContent = buildQueue().length;
     let h = '';
@@ -138,28 +146,28 @@
       const all = CARDS.filter((c) => c.level === lv);
       const m = all.filter((c) => { const p = data.cards[c.id]; return p && p.st === 'review' && p.iv >= 21; }).length;
       const l = all.filter((c) => { const p = data.cards[c.id]; return p && !(p.st === 'review' && p.iv >= 21); }).length;
-      h += `<div>${LV[lv]} · 장기기억 ${m} / 학습중 ${l} / 전체 ${all.length}</div><div class="bar"><i style="width:${100 * m / all.length}%;background:var(--l${lv})"></i><i style="width:${100 * l / all.length}%;background:var(--l${lv});opacity:.4"></i></div>`;
+      h += `<div>${LV[lv]} · Mature ${m} / Learning ${l} / Total ${all.length}</div><div class="bar"><i style="width:${100 * m / all.length}%;background:var(--l${lv})"></i><i style="width:${100 * l / all.length}%;background:var(--l${lv});opacity:.4"></i></div>`;
     }
     $('#progress').innerHTML = h;
     show('home');
   }
 
-  // ---------- 학습 ----------
+  // ---------- Study Session ----------
   function startStudy() {
     queue = buildQueue();
-    if (!queue.length) { finish('오늘 할 카드가 없음', '신규 한도를 늘리거나 내일 복습 대상이 생기면 다시 진입.'); return; }
+    if (!queue.length) { finish('No Cards Due', 'Increase daily new limit or return tomorrow for scheduled reviews.'); return; }
     sessStats = { n: 0, r: [0, 0, 0, 0], ms: 0 };
     show('study'); next();
   }
   function next() {
     if (!queue.length) {
       const s = sessStats;
-      finish('세션 완료', `복습 ${s.n}회 · 모름 ${s.r[1]} / 애매 ${s.r[2]} / 알아요 ${s.r[3]}. 내일 복습 카드가 자동 예약됨.`); return;
+      finish('Session Complete', `Reviewed ${s.n} cards · Forgot ${s.r[1]} / Hard ${s.r[2]} / Good ${s.r[3]}. Next reviews scheduled automatically.`); return;
     }
     cur = queue.shift();
-    $('#remain').textContent = `남은 카드 ${queue.length + 1}`;
+    $('#remain').textContent = `Remaining: ${queue.length + 1}`;
     $('#card').className = 'card';
-    $('#front').innerHTML = `<div class="w">${esc(cur.word)}</div><div class="p">${esc(cur.pron ? '[' + cur.pron + ']' : '')}</div><div class="pos">${esc(cur.pos)}</div><button class="speak" id="spk">🔊 발음</button>`;
+    $('#front').innerHTML = `<div class="w">${esc(cur.word)}</div><div class="p">${esc(cur.pron ? '[' + cur.pron + ']' : '')}</div><div class="pos">${esc(cur.pos)}</div><button class="speak" id="spk">🔊 Audio</button>`;
     $('#spk').onclick = () => speak(cur.word);
     $('#front').classList.remove('hidden'); $('#back').classList.add('hidden');
     $('#showWrap').classList.remove('hidden'); $('#rateWrap').classList.add('hidden');
@@ -192,16 +200,16 @@
   }
   function finish(t, b) { $('#doneTitle').textContent = t; $('#doneBody').textContent = b; show('done'); }
 
-  // ---------- 4지선다 퀴즈 (학습한 단어 대상, 오답은 같은 품사) ----------
+  // ---------- 4-Choice Quiz ----------
   let qItems = [], qi = 0, qScore = 0;
   function startQuiz() {
     const seen = pool().filter((c) => data.cards[c.id]);
-    if (seen.length < 4) { finish('퀴즈 불가', '먼저 플래시카드로 4개 이상 학습할 것.'); return; }
+    if (seen.length < 4) { finish('Quiz Unavailable', 'Study at least 4 flashcards first before starting the quiz.'); return; }
     seen.sort((a, b) => data.cards[a.id].due - data.cards[b.id].due);
     qItems = seen.slice(0, 10); qi = 0; qScore = 0; show('quiz'); nextQ();
   }
   function nextQ() {
-    if (qi >= qItems.length) { finish('퀴즈 종료', `${qScore} / ${qItems.length} 정답`); return; }
+    if (qi >= qItems.length) { finish('Quiz Finished', `Score: ${qScore} / ${qItems.length}`); return; }
     const c = qItems[qi];
     const same = CARDS.filter((x) => x.id !== c.id && x.pos === c.pos && x.ko !== c.ko);
     const wrong = shuffle(same).slice(0, 3);
@@ -228,7 +236,7 @@
   }
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-  // ---------- 이벤트 ----------
+  // ---------- Event Listeners ----------
   $('#newUserForm').onsubmit = (e) => {
     e.preventDefault();
     const n = $('#newName').value.trim(); if (!n) return;
