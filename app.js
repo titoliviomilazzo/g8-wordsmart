@@ -101,8 +101,9 @@
     return n;
   }
   // ---------- Google Sheets Sync ----------
+  const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbx5gG3smxStLtrk7YMmNhpX0GPsuJkm6HOap73RIoNEWzNOho8qXInlqfPsXuSkHTcW_A/exec';
   function getGasUrl() {
-    return localStorage.getItem('ws:gas_url') || '';
+    return localStorage.getItem('ws:gas_url') || DEFAULT_GAS_URL;
   }
   function setGasUrl(url) {
     localStorage.setItem('ws:gas_url', url.trim());
