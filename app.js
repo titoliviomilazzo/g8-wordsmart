@@ -574,18 +574,25 @@
     e.preventDefault();
     const n = $('#newName').value.trim(); if (!n) return;
     const pinVal = $('#newPin').value.trim();
-    const pin = (pinVal.length === 4 && /^\d{4}$/.test(pinVal)) ? pinVal : '1234';
-    const u = users();
-    if (!u.includes(n)) {
-      u.push(n);
-      localStorage.setItem('ws:users', JSON.stringify(u));
+    if (!/^\d{4}$/.test(pinVal)) {
+      alert('Please enter exactly 4 numeric digits for the PIN (e.g. 1234).');
+      $('#newPin').focus();
+      return;
     }
+    const u = users();
+    if (u.includes(n)) {
+      alert(`Student name "${n}" already exists.`);
+      $('#newName').focus();
+      return;
+    }
+    u.push(n);
+    localStorage.setItem('ws:users', JSON.stringify(u));
     const uData = load(n);
-    uData.pin = pin;
+    uData.pin = pinVal;
     localStorage.setItem(key(n), JSON.stringify(uData));
     $('#newName').value = '';
     $('#newPin').value = '';
-    alert(`Student "${n}" registered with PIN: ${pin}\n(PIN can be viewed/reset in Teacher Dashboard)`);
+    alert(`Student "${n}" registered with PIN: ${pinVal}`);
     enter(n);
   };
   ['chSel', 'lvSel', 'newLimit', 'shuffleOpt'].forEach((id) => $('#' + id).addEventListener('change', renderHome));

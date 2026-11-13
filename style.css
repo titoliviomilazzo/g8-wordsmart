@@ -71,3 +71,9 @@ button.big.alt{background:#fff;color:#111}
 .modal-btns button{flex:1;padding:10px;font-weight:600}
 .pin-badge{display:inline-block;background:#eef2f7;border:1px solid #c8d3e0;border-radius:4px;padding:2px 8px;font-family:monospace;font-size:13px;font-weight:700;letter-spacing:2px}
 .small-btn{padding:4px 8px;font-size:12px;border-radius:4px;cursor:pointer}
+.add-user-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0;display:flex;flex-direction:column;gap:10px}
+.add-user-card .form-title{font-weight:700;font-size:14px;color:#111}
+.add-user-card .form-inputs{display:flex;gap:8px}
+.add-user-card #newName{flex:2}
+.add-user-card #newPin{flex:1;min-width:105px;text-align:center;font-family:monospace;font-weight:700;letter-spacing:1px}
+.add-user-card button{padding:10px;font-weight:600;background:#111;color:#fff;border-color:#111}

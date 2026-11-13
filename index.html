@@ -15,10 +15,13 @@
 <main id="login" class="panel">
   <h2>Select Student</h2>
   <div id="userList"></div>
-  <form id="newUserForm">
-    <input id="newName" placeholder="New Nickname" maxlength="20" required>
-    <input id="newPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="4-digit PIN (default 1234)">
-    <button>Add</button>
+  <form id="newUserForm" class="add-user-card">
+    <div class="form-title">Register New Student</div>
+    <div class="form-inputs">
+      <input id="newName" placeholder="Student Nickname" maxlength="20" required>
+      <input id="newPin" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="4-Digit PIN" required>
+    </div>
+    <button type="submit">Add Student</button>
   </form>
   <p class="hint">Click your name and enter your 4-digit PIN to start. PINs are managed by the teacher.</p>
   <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line);text-align:center">
