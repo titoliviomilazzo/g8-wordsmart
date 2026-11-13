@@ -39,7 +39,8 @@
   }
   function buildQueue() {
     const now = Date.now(), pl = pool();
-    const learn = [], rev = [], nw = [];
+    const learn = [], rev = [];
+    let nw = [];
     for (const c of pl) {
       const p = data.cards[c.id];
       if (!p) nw.push(c);
@@ -47,11 +48,10 @@
       else if (p.due <= now && p.st === 'review') rev.push(c);
     }
     rev.sort((a, b) => data.cards[a.id].due - data.cards[b.id].due);
-    const doneNew = data.logs.filter((l) => l.n && l.t >= startOfDay()).length;
-    const room = Math.max(0, data.settings.newLimit - doneNew);
+    const room = Math.max(1, data.settings.newLimit || 10);
     if (data.settings.shuffle) {
-      nw = shuffle(nw).slice(0, room);
-      const q = [...learn, ...rev.slice(0, 40), ...nw];
+      const selectedNew = shuffle(nw).slice(0, room);
+      const q = [...learn, ...rev.slice(0, 40), ...selectedNew];
       return shuffle(q);
     } else {
       nw.sort((a, b) => a.level - b.level || a.id.localeCompare(b.id));
