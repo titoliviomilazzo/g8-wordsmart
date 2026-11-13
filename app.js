@@ -173,16 +173,29 @@
     $('#showWrap').classList.remove('hidden'); $('#rateWrap').classList.add('hidden');
     shownAt = Date.now();
   }
+  function toggleCard() {
+    if (!cur) return;
+    const isFront = $('#back').classList.contains('hidden');
+    if (isFront) {
+      // 앞면 -> 뒷면
+      $('#card').className = 'card lv' + cur.level;
+      $('#back').innerHTML =
+        `<span class="badge">${LV[cur.level]}</span><div class="w">${esc(cur.word)}</div><div class="ko">${esc(cur.ko)}</div><div class="en">${esc(cur.def)}</div>` +
+        (cur.ex ? `<div class="ex">• ${esc(cur.ex)}<div class="exko">${esc(cur.ko_ex || '')}</div></div>` : '') +
+        (cur.notes ? `<div class="note">${esc(cur.notes)}</div>` : '');
+      $('#back').classList.remove('hidden'); $('#front').classList.add('hidden');
+      $('#showWrap').classList.add('hidden'); $('#rateWrap').classList.remove('hidden');
+      if (!cur._ms) cur._ms = Date.now() - shownAt;
+    } else {
+      // 뒷면 -> 앞면
+      $('#card').className = 'card';
+      $('#front').classList.remove('hidden'); $('#back').classList.add('hidden');
+      $('#showWrap').classList.remove('hidden'); $('#rateWrap').classList.add('hidden');
+    }
+  }
   function reveal() {
-    if (!cur || !$('#back').classList.contains('hidden')) return;
-    $('#card').className = 'card lv' + cur.level;
-    $('#back').innerHTML =
-      `<span class="badge">${LV[cur.level]}</span><div class="w">${esc(cur.word)}</div><div class="ko">${esc(cur.ko)}</div><div class="en">${esc(cur.def)}</div>` +
-      (cur.ex ? `<div class="ex">• ${esc(cur.ex)}<div class="exko">${esc(cur.ko_ex || '')}</div></div>` : '') +
-      (cur.notes ? `<div class="note">${esc(cur.notes)}</div>` : '');
-    $('#back').classList.remove('hidden'); $('#front').classList.add('hidden');
-    $('#showWrap').classList.add('hidden'); $('#rateWrap').classList.remove('hidden');
-    cur._ms = Date.now() - shownAt;
+    if (!cur) return;
+    if ($('#back').classList.contains('hidden')) toggleCard();
   }
   function rate(r) {
     if (!cur || $('#back').classList.contains('hidden')) return;
@@ -246,7 +259,12 @@
   ['chSel', 'lvSel', 'newLimit', 'shuffleOpt'].forEach((id) => $('#' + id).addEventListener('change', renderHome));
   $('#startStudy').onclick = startStudy;
   $('#startQuiz').onclick = startQuiz;
-  $('#showBtn').onclick = reveal;
+  $('#showBtn').onclick = toggleCard;
+  $('#card').onclick = (e) => {
+    // 발음 듣기 버튼 클릭 시에는 뒤집히지 않도록 예외 처리
+    if (e.target && e.target.id === 'spk') return;
+    toggleCard();
+  };
   document.querySelectorAll('#rateWrap button').forEach((b) => (b.onclick = () => rate(+b.dataset.r)));
   $('#quit').onclick = $('#quizQuit').onclick = $('#backHome').onclick = $('#teacherBack').onclick = renderHome;
   $('#teacherBtn').onclick = renderTeacher;
@@ -266,7 +284,7 @@
   };
   document.addEventListener('keydown', (e) => {
     if ($('#study').classList.contains('hidden') || e.target.tagName === 'INPUT') return;
-    if (e.code === 'Space') { e.preventDefault(); reveal(); }
+    if (e.code === 'Space') { e.preventDefault(); toggleCard(); }
     else if (['1', '2', '3'].includes(e.key)) rate(+e.key);
   });
 

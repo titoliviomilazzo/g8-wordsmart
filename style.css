@@ -17,12 +17,13 @@ button.big.alt{background:#fff;color:#111}
 .stat span{font-size:12px;color:#333}
 .hint{font-size:13px}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.card{background:#fff;border:2px solid var(--line);border-radius:16px;min-height:340px;display:flex;flex-direction:column;justify-content:center}
+.card{background:#fff;border:2px solid var(--line);border-radius:16px;min-height:340px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:transform 0.15s ease}
+.card:active{transform:scale(0.985)}
 .face{padding:28px;text-align:center}
 .front .w{font-size:44px;font-weight:700}
 .front .p{margin-top:8px;font-size:16px}
 .front .pos{margin-top:6px;font-size:14px;color:#444}
-.speak{margin-top:14px}
+.speak{margin-top:14px;cursor:pointer}
 .card.lv1{border-color:var(--l1);background:var(--l1bg)}
 .card.lv2{border-color:var(--l2);background:var(--l2bg)}
 .card.lv3{border-color:var(--l3);background:var(--l3bg)}
