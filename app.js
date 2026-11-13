@@ -103,7 +103,8 @@
   // ---------- Google Sheets Sync ----------
   const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbx5gG3smxStLtrk7YMmNhpX0GPsuJkm6HOap73RIoNEWzNOho8qXInlqfPsXuSkHTcW_A/exec';
   function getGasUrl() {
-    return localStorage.getItem('ws:gas_url') || DEFAULT_GAS_URL;
+    const saved = localStorage.getItem('ws:gas_url') || '';
+    return saved.startsWith('https://script.google.com/macros/s/') ? saved : DEFAULT_GAS_URL;
   }
   function setGasUrl(url) {
     localStorage.setItem('ws:gas_url', url.trim());
@@ -111,11 +112,14 @@
   function syncToGoogleSheets(sessionSummary) {
     const url = getGasUrl();
     if (!url || !user) return;
+    const chEl = $('#chSel'), lvEl = $('#lvSel');
+    const chText = chEl && chEl.selectedIndex >= 0 ? chEl.options[chEl.selectedIndex].text : 'All';
+    const lvText = lvEl && lvEl.selectedIndex >= 0 ? lvEl.options[lvEl.selectedIndex].text : 'All';
     const payload = JSON.stringify({
       student: user,
       timestamp: new Date().toISOString(),
-      chapter: $('#chSel') ? $('#chSel').options[$('#chSel').selectedIndex].text : 'All',
-      level: $('#lvSel') ? $('#lvSel').options[$('#lvSel').selectedIndex].text : 'All',
+      chapter: chText,
+      level: lvText,
       reviewedCount: sessionSummary.reviewedCount || 0,
       forgotCount: sessionSummary.forgotCount || 0,
       hardCount: sessionSummary.hardCount || 0,
@@ -126,10 +130,10 @@
       streak: streak()
     });
     try {
-      // Google Apps Script는 text/plain으로 전송해야 브라우저 CORS 프리플라이트 없이 doPost에 온전히 도달함
       fetch(url, {
         method: 'POST',
         mode: 'no-cors',
+        keepalive: true,
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: payload
       }).catch((e) => console.log('Sync err:', e));
@@ -209,6 +213,7 @@
         goodCount: s.r[3],
         accuracy: acc
       });
+      sessStats = null;
       finish('Session Complete', `Reviewed ${s.n} cards · Forgot ${s.r[1]} / Hard ${s.r[2]} / Good ${s.r[3]}. Next reviews scheduled automatically.`); return;
     }
     cur = queue.shift();
@@ -371,7 +376,17 @@
     qItems = seen.slice(0, 10); qi = 0; qScore = 0; show('quiz'); nextQ();
   }
   function nextQ() {
-    if (qi >= qItems.length) { finish('Quiz Finished', `Score: ${qScore} / ${qItems.length}`); return; }
+    if (qi >= qItems.length) {
+      const n = qItems.length;
+      syncToGoogleSheets({
+        reviewedCount: n,
+        forgotCount: n - qScore,
+        hardCount: 0,
+        goodCount: qScore,
+        accuracy: n > 0 ? Math.round((qScore / n) * 100) : 0
+      });
+      finish('Quiz Finished', `Score: ${qScore} / ${n}`); return;
+    }
     const c = qItems[qi];
     const same = CARDS.filter((x) => x.id !== c.id && x.pos === c.pos && x.ko !== c.ko);
     const wrong = shuffle(same).slice(0, 3);
@@ -456,6 +471,21 @@
     if ($('#study').classList.contains('hidden') || e.target.tagName === 'INPUT') return;
     if (e.code === 'Space') { e.preventDefault(); toggleCard(); }
     else if (['1', '2', '3'].includes(e.key)) rate(+e.key);
+  });
+
+  window.addEventListener('pagehide', () => {
+    if (sessStats && sessStats.n > 0) {
+      const s = sessStats;
+      const acc = Math.round(((s.r[2] + s.r[3]) / s.n) * 100);
+      syncToGoogleSheets({
+        reviewedCount: s.n,
+        forgotCount: s.r[1],
+        hardCount: s.r[2],
+        goodCount: s.r[3],
+        accuracy: acc
+      });
+      sessStats = null;
+    }
   });
 
   renderLogin();
