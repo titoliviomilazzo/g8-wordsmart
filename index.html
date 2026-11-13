@@ -59,6 +59,12 @@
 <main id="teacher" class="panel hidden">
   <div class="topbar"><button id="teacherBack">← Back to Home</button><h2>Teacher Progress Dashboard</h2></div>
   <p class="hint">Overview of all registered students' learning progress and retention stats on this device.</p>
+  <div class="row" style="background:#fff;padding:12px;border-radius:8px;border:1px solid var(--line);margin:14px 0">
+    <label style="flex:1">Google Sheets Web App URL (Optional Sync)
+      <input type="text" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+    </label>
+    <button id="saveGasBtn">Save URL</button>
+  </div>
   <div id="teacherTableWrap"></div>
 </main>
 

@@ -100,6 +100,42 @@
     while (days.has(d)) { n++; d--; }
     return n;
   }
+  // ---------- Google Sheets Sync ----------
+  function getGasUrl() {
+    return localStorage.getItem('ws:gas_url') || '';
+  }
+  function setGasUrl(url) {
+    localStorage.setItem('ws:gas_url', url.trim());
+  }
+  function syncToGoogleSheets(sessionSummary) {
+    const url = getGasUrl();
+    if (!url || !user) return;
+    const payload = {
+      student: user,
+      timestamp: new Date().toISOString(),
+      chapter: $('#chSel') ? $('#chSel').options[$('#chSel').selectedIndex].text : 'All',
+      level: $('#lvSel') ? $('#lvSel').options[$('#lvSel').selectedIndex].text : 'All',
+      reviewedCount: sessionSummary.reviewedCount || 0,
+      forgotCount: sessionSummary.forgotCount || 0,
+      hardCount: sessionSummary.hardCount || 0,
+      goodCount: sessionSummary.goodCount || 0,
+      accuracy: sessionSummary.accuracy || 0,
+      totalLearned: Object.keys(data.cards).length,
+      matureCount: Object.values(data.cards).filter((p) => p.st === 'review' && p.iv >= 21).length,
+      streak: streak()
+    };
+    try {
+      fetch(url, {
+        method: 'POST',
+        mode: 'no-cors', // Apps Script CORS 우회용 표준 방식
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch((e) => console.log('Sync err:', e));
+    } catch (e) {
+      console.log('Sync err:', e);
+    }
+  }
+
   function renderTeacher() {
     const us = users();
     let rows = '';
@@ -119,6 +155,7 @@
         <td>${ret}%</td>
       </tr>`;
     });
+    $('#gasUrlInput').value = getGasUrl();
     $('#teacherTableWrap').innerHTML = `<table class="tbl">
       <thead><tr><th>Student</th><th>Streak</th><th>Today's Reviews</th><th>Words Seen</th><th>Mature (21d+)</th><th>Recent Accuracy</th></tr></thead>
       <tbody>${rows || '<tr><td colspan="6">No registered students yet.</td></tr>'}</tbody>
@@ -162,6 +199,14 @@
   function next() {
     if (!queue.length) {
       const s = sessStats;
+      const acc = s.n > 0 ? Math.round(((s.r[2] + s.r[3]) / s.n) * 100) : 0;
+      syncToGoogleSheets({
+        reviewedCount: s.n,
+        forgotCount: s.r[1],
+        hardCount: s.r[2],
+        goodCount: s.r[3],
+        accuracy: acc
+      });
       finish('Session Complete', `Reviewed ${s.n} cards · Forgot ${s.r[1]} / Hard ${s.r[2]} / Good ${s.r[3]}. Next reviews scheduled automatically.`); return;
     }
     cur = queue.shift();
@@ -370,6 +415,11 @@
   document.querySelectorAll('#rateWrap button').forEach((b) => (b.onclick = () => rate(+b.dataset.r, b)));
   $('#quit').onclick = $('#quizQuit').onclick = $('#backHome').onclick = $('#teacherBack').onclick = renderHome;
   $('#teacherBtn').onclick = renderTeacher;
+  $('#saveGasBtn').onclick = () => {
+    const val = $('#gasUrlInput').value.trim();
+    setGasUrl(val);
+    alert(val ? 'Google Sheets Sync URL saved successfully!' : 'Google Sheets Sync URL cleared.');
+  };
   $('#switchUser').onclick = renderLogin;
   $('#exportBtn').onclick = () => {
     const a = document.createElement('a');
